@@ -1,6 +1,8 @@
 package com.example.EsercizioEpicode.services;
 
+import com.cloudinary.provisioning.Account;
 import com.example.EsercizioEpicode.entities.Dipendente;
+import com.example.EsercizioEpicode.enums.Ruolo;
 import com.example.EsercizioEpicode.exceptions.NotFoundException;
 import com.example.EsercizioEpicode.repositories.DipendenteRepository;
 import com.example.EsercizioEpicode.requests.DipendentePatchRequest;
@@ -8,6 +10,7 @@ import com.example.EsercizioEpicode.requests.DipendenteRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -16,9 +19,12 @@ import java.util.Optional;
 public class DipendenteService {
     @Autowired
     private DipendenteRepository dipendenteRepository;
+    @Autowired
+    public PasswordEncoder encoder;
     public Dipendente save(DipendenteRequest d){
         Dipendente dipendente=new Dipendente();
-        dipendente.setPassword(d.getPassword());
+        dipendente.setPassword(encoder.encode(d.getPassword()));
+        dipendente.setRuolo(Ruolo.USER);
         return dipendenteRepository.save(put(d,dipendente));
     }
     public Dipendente update(int id, DipendenteRequest d) throws NotFoundException {
@@ -65,4 +71,9 @@ public class DipendenteService {
         return dipendenteOptional.get();
     }
 
+    public Dipendente setRole(int id,String role){
+        Dipendente dipendente=findById(id);
+        dipendente.setRuolo(Ruolo.valueOf(role));
+        return dipendenteRepository.save(dipendente);
+    }
 }

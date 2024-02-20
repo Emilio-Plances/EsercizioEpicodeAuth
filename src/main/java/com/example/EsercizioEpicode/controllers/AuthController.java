@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth/")
 public class AuthController {
+    @Autowired
+    public PasswordEncoder encoder;
     @Autowired
     private JwtTools jwtTools;
     @Autowired
@@ -38,7 +41,7 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@RequestBody @Validated LoginRequest lR, BindingResult bR) throws NotFoundException, UnauthorizedException {
         if(bR.hasErrors()) throw new BadRequestException(bR.getAllErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).toList().toString());
         Dipendente d=dipendenteService.findByUsername(lR.getUsername());
-        if(!d.getPassword().equals(lR.getPassword())) throw new UnauthorizedException("Username/Password sbagliati");
+        if(encoder.matches(d.getPassword(),lR.getPassword())) throw new UnauthorizedException("Username/Password sbagliati");
         return LoginResponse.success("Logged",jwtTools.createToken(d),d,HttpStatus.OK);
     }
 }
